@@ -1,0 +1,176 @@
+<style>
+    .report-card {
+        background-color: #ffffff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        page-break-inside: avoid; /* Prevents card from splitting if printed */
+    }
+    .report-card h2 {
+        color: #0056b3;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 10px;
+        margin-top: 0;
+    }
+    .report-card h3 {
+        color: #333;
+        margin-top: 20px;
+    }
+    .report-card p, .report-card li {
+        color: #444;
+    }
+    .source-url {
+        font-size: 0.9em;
+        color: #777;
+        word-break: break-all;
+    }
+
+    /* --- Sentiment Badge Styling --- */
+    .sentiment-badge {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 1em;
+        color: #fff;
+        border: 2px solid;
+    }
+    .sentiment-Positive { 
+        background-color: #e6f7ec; 
+        color: #2a6f47; 
+        border-color: #2a6f47;
+    }
+    .sentiment-Negative { 
+        background-color: #fff0f0; 
+        color: #b71c1c; 
+        border-color: #b71c1c;
+    }
+    .sentiment-Neutral { 
+        background-color: #f1f3f5; 
+        color: #495057; 
+        border-color: #495057;
+    }
+    .sentiment-Failed, .sentiment-NA { 
+        background-color: #fffbe6; 
+        color: #725c00; 
+        border-color: #725c00;
+    }
+
+    /* --- NEW: Sentiment Explanation Box --- */
+    .sentiment-explainer {
+        font-size: 0.9em;
+        padding: 10px;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+    .explainer-Positive { background-color: #e6f7ec; border-left: 4px solid #2a6f47; }
+    .explainer-Negative { background-color: #fff0f0; border-left: 4px solid #b71c1c; }
+    .explainer-Neutral { background-color: #f1f3f5; border-left: 4px solid #495057; }
+    
+    .entity-list {
+        list-style-type: none;
+        padding-left: 0;
+    }
+    .entity-list li {
+        display: inline-block;
+        background-color: #eef;
+        border: 1px solid #cce;
+        padding: 4px 10px;
+        border-radius: 4px;
+        margin: 4px;
+        font-size: 0.9em;
+    }
+    .financial-facts-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+        font-size: 0.95em;
+    }
+    .financial-facts-table th, .financial-facts-table td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: left;
+    }
+    .financial-facts-table th {
+        background-color: #f4f7f6;
+    }
+    .no-facts {
+        color: #888;
+        font-style: italic;
+    }
+</style>
+
+<div class="report-card">
+    <h2>Analysis Report</h2>
+
+    <h3>1. Source and Sentiment</h3>
+    
+    <p><strong>Source:</strong> 
+        <a href="{{ report.url }}" target="_blank" class="source-url">
+            {{ report.heading | title }}
+        </a>
+    </p>
+    <p>
+        <strong>Predicted Sentiment:</strong> 
+        <span class="sentiment-badge sentiment-{{ report.article_type | replace(' ', '') }}">
+            {{ report.article_type }}
+        </span>
+    </p>
+
+    {% if report.article_type == 'Positive' %}
+        <div class="sentiment-explainer explainer-Positive">
+            <strong>Positive:</strong> Indicates the article likely contains favorable news, positive financial results, or optimistic market outlooks.
+        </div>
+    {% elif report.article_type == 'Negative' %}
+        <div class="sentiment-explainer explainer-Negative">
+            <strong>Negative:</strong> Indicates the article likely contains unfavorable news, poor financial results, market downturns, or warnings.
+        </div>
+    {% elif report.article_type == 'Neutral' %}
+        <div class="sentiment-explainer explainer-Neutral">
+            <strong>Neutral:</strong> Indicates the article is primarily factual, descriptive, or does not carry a strong positive or negative bias.
+        </div>
+    {% endif %}
+
+
+    <h3>2. Executive Summary</h3>
+    <p>{{ report.summary }}</p>
+
+    <h3>3. Key Entities Extracted</h3>
+    <strong>Organizations (ORG):</strong>
+    {% if report.entities.ORG %}
+        <ul class="entity-list">
+            {% for item in report.entities.ORG %}<li>{{ item }}</li>{% endfor %}
+        </ul>
+    {% else %}
+        <p class="no-facts">None found.</p>
+    {% endif %}
+
+    <strong>People (PERSON):</strong>
+    {% if report.entities.PERSON %}
+        <ul class="entity-list">
+            {% for item in report.entities.PERSON %}<li>{{ item }}</li>{% endfor %}
+        </ul>
+    {% else %}
+        <p class="no-facts">None found.</p>
+    {% endif %}
+    
+    <strong>Locations (GPE):</strong>
+    {% if report.entities.GPE %}
+        <ul class="entity-list">
+            {% for item in report.entities.GPE %}<li>{{ item }}</li>{% endfor %}
+        </ul>
+    {% else %}
+        <p class="no-facts">None found.</p>
+    {% endif %}
+
+    <h3>4. Structured Financial Facts</h3>
+    {% if report.financial_facts_table and not report.financial_facts.empty %}
+        <div class="financial-facts-table">
+            {{ report.financial_facts_table | safe }}
+        </div>
+    {% else %}
+        <p class="no-facts">No structured financial facts were extracted.</p>
+    {% endif %}
+</div>
